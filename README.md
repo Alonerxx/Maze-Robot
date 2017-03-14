@@ -3,4 +3,4 @@ IIUM Maze Robot UTP
 
 
 
-here is demon
+here is demon and encoder
