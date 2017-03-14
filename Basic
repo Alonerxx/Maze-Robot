@@ -1,0 +1,136 @@
+#define InA1            8                       // INA motor pin
+#define InB1            9                       // INB motor pin 
+#define PWM1            10                      // PWM motor pin
+#define InA2            12                       // INA motor pin
+#define InB2            13                       // INB motor pin 
+#define PWM2            11                      // PWM motor pin
+#define encodPinA1      2                       // encoder A pin
+#define encodPinB1      4                       // encoder B pin
+#define encodPinA2      3                       // encoder A pin
+#define encodPinB2      5                       // encoder B pin
+#define LOOPTIME        5                     // PID loop time
+#define PRINTTIME       5                     // Display result loop time
+
+
+int PWM_val1 = 40;                                // (25% = 64; 50% = 127; 75% = 191; 100% = 255)
+int PWM_val2 = 40;
+int currentpoint1 = 0;                           
+int currentpoint2 = 0;
+int setpoint = 107;                              
+static int count1=0;                             
+static int count2=0;
+unsigned long lastMilli = 0;                    // loop timing
+unsigned long lastMilliPrint = 0;               // loop timing
+
+
+float Kp =    .56;                                // PID proportional control Gain
+float Kd =    20;                                // PID Derivitave control gain
+
+float Kp2 =    .5;                                // PID proportional control Gain
+float Kd2 =    23;
+
+void setup() { 
+ Serial.begin(250000);
+ pinMode(InA1, OUTPUT);
+ pinMode(InB1, OUTPUT);
+ pinMode(PWM1, OUTPUT);
+ pinMode(InA2, OUTPUT);
+ pinMode(InB2, OUTPUT);
+ pinMode(PWM2, OUTPUT);
+ pinMode(encodPinA1, INPUT);
+ pinMode(encodPinB1, INPUT);
+ pinMode(encodPinA2, INPUT);
+ pinMode(encodPinB2, INPUT);
+ attachInterrupt(digitalPinToInterrupt(encodPinA1), rencoder1, RISING);
+ attachInterrupt(digitalPinToInterrupt(encodPinA2), rencoder2, RISING);
+ analogWrite(PWM1, 100);
+ digitalWrite(InB1, HIGH);
+ digitalWrite(InA1, LOW); 
+ analogWrite(PWM2, 100);
+ digitalWrite(InB2, LOW);
+ digitalWrite(InA2, HIGH);
+}
+
+void loop() {
+  if((millis()-lastMilli) >= LOOPTIME)   { 
+    lastMilli = millis(); 
+    PWM_val1= updatePid1(PWM_val1, setpoint, count1);                        // compute PWM value
+    PWM_val2= updatePid2(PWM_val2, setpoint, count2);                        // compute PWM value
+//    if ( count1<setpoint){
+//       digitalWrite(InB1, HIGH);
+//       digitalWrite(InA1, LOW);
+//    }
+//    else {
+//       digitalWrite(InB1, LOW);
+//       digitalWrite(InA1, HIGH);
+//    }
+//
+//    if ( count2<setpoint){
+//       digitalWrite(InB2, HIGH);
+//       digitalWrite(InA2, LOW);
+//    }
+//    else {
+//       digitalWrite(InB2, LOW);
+//       digitalWrite(InA2, HIGH);
+//    }
+    analogWrite(PWM1, PWM_val1);                                               // send PWM to motor                      
+    analogWrite(PWM2, PWM_val2);                                               // send PWM to motor                      
+    
+  }
+  printMotorInfo();
+}
+
+
+
+int updatePid1(int command, int targetValue, int currentValue)   {             // compute PWM value
+float pidTerm = 0;                                                            // PID correction
+int error=0;                                  
+static int last_error1=0;                             
+ error = abs(targetValue) - abs(currentValue); 
+ pidTerm = (Kp * error) + (Kd * (error - last_error1));                            
+ last_error1 = error;
+ return constrain(command + int(pidTerm), 0, 170);
+}
+
+int updatePid2(int command, int targetValue, int currentValue)   {             // compute PWM value
+float pidTerm = 0;                                                            // PID correction
+int error=0;                                  
+static int last_error2=0;                             
+ error = abs(targetValue) - abs(currentValue); 
+ pidTerm = (Kp2 * error) + (Kd2 * (error - last_error2));                            
+ last_error2 = error;
+ return constrain(command + int(pidTerm), 0, 170);
+}
+
+void rencoder1()  {                                    // pulse and direction, direct port reading to save cycles
+// if (PINB & 0b00000001)    count++;                // if(digitalRead(encodPinB1)==HIGH)   count ++;
+// else                      count--;                // if (digitalRead(encodPinB1)==LOW) 
+  if(digitalRead(encodPinB1)==HIGH)   count1 --;
+  else if (digitalRead(encodPinB1)==LOW)count1 ++;
+  //Serial.println(count);
+}
+
+void rencoder2()  {                                    // pulse and direction, direct port reading to save cycles
+// if (PINB & 0b00000001)    count++;                // if(digitalRead(encodPinB1)==HIGH)   count ++;
+// else                      count--;                // if (digitalRead(encodPinB1)==LOW) 
+  if(digitalRead(encodPinB2)==HIGH)   count2 --;
+  else if (digitalRead(encodPinB2)==LOW)count2 ++;
+  //Serial.println(count);
+}
+
+ void printMotorInfo()  {                                                      // display data
+ if((millis()-lastMilliPrint) >= PRINTTIME)   {                     
+   lastMilliPrint = millis();
+//   Serial.print("SP:");             
+//   Serial.print(speed_req);  Serial.print('\t');
+   Serial.print("  COUNT 1:");          
+   Serial.print(count1);  Serial.print('\t');
+   Serial.print("  PWM 1:");          
+   Serial.print(PWM_val1);  Serial.print('\t');
+   
+   Serial.print("  COUNT 2:");          
+   Serial.print(count2);  Serial.print('\t');
+   Serial.print("  PWM 2:");          
+   Serial.println(PWM_val2); 
+ }
+}
