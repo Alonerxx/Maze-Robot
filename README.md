@@ -1,6 +1,3 @@
 # Maze-Robot
 IIUM Maze Robot UTP
-
-
-
-here is demon
+demon rules the world
