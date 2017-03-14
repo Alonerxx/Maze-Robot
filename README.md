@@ -1,6 +1,4 @@
 # Maze-Robot
 IIUM Maze Robot UTP
-
-wmoiecoiwoiqjs
-
-Dota2
+demon rules the world
+and he gives us food
