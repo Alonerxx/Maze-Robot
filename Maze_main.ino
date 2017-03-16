@@ -1,8 +1,8 @@
 #include <SharpIR.h>
 
-#define ir A2
+#define ir_front A2
 #define model 1080
-SharpIR sharp(ir, 25, 93, model);
+SharpIR sharp_front(ir_front, 25, 93, model);
 
 #define ir_left A1
 #define model 1080
@@ -37,18 +37,14 @@ int motorPin[6]={InA1,InB1,PWM1,InA2,InB2,PWM2};
 int PWM_val1 = 0;                                // (25% = 64; 50% = 127; 75% = 191; 100% = 255)
 int PWM_val2 = 0;
 int PWM_valR = 0;
-int currentpoint1 = 0;                           
-int currentpoint2 = 0;                      
-int currentpointR = 0;   
-int setpoint = 7;      
-int setpointR = 12;                             
+int setpoint = 7;
+int setpointR= 12;                             
 static int count1 = 0;                             
 static int count2 = 0;
 unsigned long lastMilli = 0;                    // loop timing
 unsigned long lastMilliPrint = 0;               // loop timing
-boolean trigger = false;
 
-int setpoint1 = 107;
+int setpointT = 107;
        
 float Kp =    .56;                                // PID proportional control Gain
 float Kd =    20;                                // PID Derivitave control gain
@@ -59,20 +55,20 @@ float Kd2 =    23;
 float KpR =    0.5;                                // PID proportional control Gain
 float KdR =    23;
 
-bool turnFlag=false;
+bool turnFlag = false;
 
 bool calibrate(){
+//  coding here
   
 }
 
 void turnL(){
     stop();delay(200);    
     count1=0;count2=0;
-    setpoint=107; 
     Serial.println("Ready to turn");
-    while((-count1<setpoint1)|| (count2<setpoint1)){
-          PWM_val1= updatePid1(PWM_val1, setpoint1, count1);                        // compute PWM value
-          PWM_val2= updatePid2(PWM_val2, setpoint1, count2);                        // compute PWM value    
+    while((-count1<setpointT)|| (count2<setpointT)){
+          PWM_val1= updatePid1(PWM_val1, setpointT, count1);                        // compute PWM value
+          PWM_val2= updatePid2(PWM_val2, setpointT, count2);                        // compute PWM value    
           motor(1,PWM_val1,0,PWM_val2);
           printMotorInfo();
       }
@@ -125,14 +121,14 @@ static int last_errorR=0;
  error =  abs(currentValue)-abs(targetValue); 
  pidTerm = (KpR * error) + (KdR * (error - last_errorR));                            
  last_errorR = error;
- return constrain(command + int(pidTerm), 0, 170);
+ return constrain(command + int(pidTerm), 0, motorlimit);
 }  
 
 void motor(bool dirL, int spdL, bool dirR, int spdR){                    // 0= FRONT 1=BACK
   moveMotorL(spdL,dirL);                                                 // motor(0,100,0,100);
   moveMotorR(spdR,dirR);
 }
-void stop(){                    // 0= FRONT 1=BACK
+void stop(){                    // 0 = FRONT  1 = BACK
   motor(0,0,0,0);
 }
 void moveMotorL(int pwm,bool dir){
@@ -193,7 +189,7 @@ void setup() {
  pinMode(encodPinB2, INPUT);
  attachInterrupt(digitalPinToInterrupt(encodPinA1), rencoder1, RISING);
  attachInterrupt(digitalPinToInterrupt(encodPinA2), rencoder2, RISING);
- pinMode (ir, INPUT);
+ pinMode (ir_front, INPUT);
  pinMode (ir_left, INPUT);
  pinMode (ir_right, INPUT);
  motor(0,60,0,60);
@@ -201,21 +197,21 @@ void setup() {
 }
 
 void loop() {
-  int dis = sharp.distance();
-  int dis2 = constrain(dis, 0, 80); 
-  Serial.println (dis2);
+  int dis = sharp_front.distance();
+  dis = constrain(dis, 0, 80); 
+  Serial.println (dis);
 
   if ((millis()-lastMilli) >= LOOPTIME) {
     lastMilli = millis();
-        if (dis>setpointR + 1) {                              //front sensor
+        if (dis > setpointR + 1) {                              //front sensor
            motor(0,60,0,60);
            } 
-        else if (dis<setpointR - 1) {
+        else if (dis < setpointR - 1) {
            Serial.println("TURRRRRRRRNNNNNNNNNNNNN");          //VALID TURN?
-           turnFlag=true; 
+           turnFlag = true; 
            }
-        if (turnFlag==true){
-           while(calibrate()==false){};         
+        if (turnFlag == true){
+           while(calibrate() == false){};         
            turnL();        
            }
   }
