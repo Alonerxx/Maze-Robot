@@ -19,7 +19,7 @@ int PWM_valS1 = 60;
 int PWM_valS2 = 60;
 int setpoint = 7;      
 int setpointR = 10;
-int setpointS = 2;                             
+int setpointS = 4;                             
 static int count1 = 0;                             
 static int count2 = 0;
 unsigned long lastMilli = 0;                    // loop timing
@@ -67,7 +67,7 @@ static int last_errorS=0;
  error =   abs(targetValue) - abs(currentValue); 
  pidTerm = (KpS1 * error) + (KdS1 * (error - last_errorS));                            
  last_errorS = error;
- return constrain(command + int(pidTerm), 0, 255);
+ return constrain(command + int(pidTerm), 0, 170);
 }        
 
 int rotSpdPid2(int command, int targetValue, int currentValue)   {             // compute PWM value
@@ -77,7 +77,7 @@ static int last_errorS=0;
  error =   abs(targetValue) - abs(currentValue); 
  pidTerm = (KpS2 * error) + (KdS2 * (error - last_errorS));                            
  last_errorS = error;
- return constrain(command + int(pidTerm), 0, 255);
+ return constrain(command + int(pidTerm), 0, 170);
 } 
 
 //int rangePid(int command, int targetValue, int currentValue)   {             // compute PWM value
@@ -171,7 +171,6 @@ void setup() {
  pinMode(encodPinB2, INPUT);
  attachInterrupt(digitalPinToInterrupt(encodPinA1), rencoder1, RISING);
  attachInterrupt(digitalPinToInterrupt(encodPinA2), rencoder2, RISING);
- motor(0,60,0,60);
  delay(500);
 }
 
@@ -184,9 +183,7 @@ if ((millis()-lastMilli) >= LOOPTIME) {
     printMotorInfo();
     refreshCount();
     motor (0, PWM_valS1, 0, PWM_valS2);
-
 }
-
 }
 
 
